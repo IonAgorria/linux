@@ -255,7 +255,7 @@ int dcp_get_connector_type(struct platform_device *pdev)
 }
 EXPORT_SYMBOL_GPL(dcp_get_connector_type);
 
-static int dcp_dptx_connect(struct apple_dcp *dcp, u32 port)
+int dcp_dptx_connect(struct apple_dcp *dcp, u32 port)
 {
 	int ret = 0;
 
@@ -290,8 +290,9 @@ out_unlock:
 	mutex_unlock(&dcp->hpd_mutex);
 	return ret;
 }
+EXPORT_SYMBOL_GPL(dcp_dptx_connect);
 
-static int dcp_dptx_disconnect(struct apple_dcp *dcp, u32 port)
+int dcp_dptx_disconnect(struct apple_dcp *dcp, u32 port)
 {
 	struct apple_connector *connector = dcp->connector;
 	dev_info(dcp->dev, "%s(port=%d)\n", __func__, port);
@@ -311,6 +312,7 @@ static int dcp_dptx_disconnect(struct apple_dcp *dcp, u32 port)
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(dcp_dptx_disconnect);
 
 static irqreturn_t dcp_dp2hdmi_hpd(int irq, void *data)
 {
@@ -330,6 +332,15 @@ static irqreturn_t dcp_dp2hdmi_hpd(int irq, void *data)
 
 	return IRQ_HANDLED;
 }
+
+void dcp_hack(struct platform_device *pdev, struct phy *phy, struct mux_control *mux)
+{
+	struct apple_dcp *dcp = platform_get_drvdata(pdev);
+
+	dcp->dptxport[0].atcphy = phy;
+	dcp->dptxport[0].mux = mux;
+}
+EXPORT_SYMBOL_GPL(dcp_hack);
 
 void dcp_link(struct platform_device *pdev, struct apple_crtc *crtc,
 	      struct apple_connector *connector)
