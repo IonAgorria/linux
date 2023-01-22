@@ -138,6 +138,8 @@ static int dp_altmode_status_update(struct dp_altmode *dp)
 	u8 con = DP_STATUS_CONNECTION(dp->data.status);
 	int ret = 0;
 
+	printk(KERN_ERR "%s: status: %02x\n", __func__, dp->data.status);
+
 	if (configured && (dp->data.status & DP_STATUS_SWITCH_TO_USB)) {
 		dp->data.conf = 0;
 		dp->state = DP_STATE_CONFIGURE;
@@ -152,7 +154,8 @@ static int dp_altmode_status_update(struct dp_altmode *dp)
 				dp->pending_hpd = true;
 			}
 		}
-	} else {
+	} /*else*/ {
+		dev_warn(&dp->alt->dev, "%s else\n", __func__);
 		if (dp->hpd != hpd) {
 			drm_connector_oob_hotplug_event(dp->connector_fwnode);
 			dp->hpd = hpd;
@@ -165,6 +168,7 @@ static int dp_altmode_status_update(struct dp_altmode *dp)
 
 static int dp_altmode_configured(struct dp_altmode *dp)
 {
+	dev_warn(&dp->alt->dev, "%s\n", __func__);
 	sysfs_notify(&dp->alt->dev.kobj, "displayport", "configuration");
 	sysfs_notify(&dp->alt->dev.kobj, "displayport", "pin_assignment");
 	/*
@@ -285,6 +289,8 @@ static int dp_altmode_vdm(struct typec_altmode *alt,
 	int cmd_type = PD_VDO_CMDT(hdr);
 	int cmd = PD_VDO_CMD(hdr);
 	int ret = 0;
+
+	dev_err(&alt->dev, "%s: cmd: 0x0%x\n", __func__, cmd);
 
 	mutex_lock(&dp->lock);
 
