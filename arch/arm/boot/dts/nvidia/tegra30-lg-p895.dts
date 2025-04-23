@@ -130,7 +130,7 @@
 			compatible = "onnn,mt9m114";
 			reg = <0x48>;
 
-			clocks = <&tegra_car TEGRA30_CLK_VI_SENSOR>;
+			clocks = <&tegra_car TEGRA30_CLK_CSUS>;
 
 			reset-gpios = <&gpio TEGRA_GPIO(BB, 5) GPIO_ACTIVE_LOW>;
 
@@ -140,16 +140,18 @@
 
 			orientation = <0>; /* Front camera */
 
-			assigned-clocks = <&tegra_car TEGRA30_CLK_VI_SENSOR>;
+			assigned-clocks = <&tegra_car TEGRA30_CLK_VI_SENSOR>,
+					  <&tegra_car TEGRA30_CLK_CSUS>;
 			assigned-clock-rates = <24000000>;
-			assigned-clock-parents = <&tegra_car TEGRA30_CLK_PLL_P>;
+			assigned-clock-parents = <&tegra_car TEGRA30_CLK_PLL_P>,
+						 <&tegra_car TEGRA30_CLK_VI_SENSOR>;
 
 			port {
 				front_camera_output: endpoint {
 					data-lanes = <3>;
 					bus-type = <MEDIA_BUS_TYPE_CSI2_DPHY>;
 					link-frequencies = /bits/ 64 <384000000>;
-//					remote-endpoint = <&csib_input>;
+					remote-endpoint = <&csib_input>;
 				};
 			};
 		};
