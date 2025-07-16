@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: GPL-2.0
+/dts-v1/;
+
+#include "tegra20-motorola-mot.dtsi"
+
+/ {
+	model = "Motorola Droid X2 (MB870)";
+	compatible = "motorola,daytona", "nvidia,tegra20";
+
+	kbc@7000e200 {
+		status = "okay";
+
+		nvidia,debounce-delay-ms = <20>;
+		nvidia,repeat-delay-ms = <1600>;
+		nvidia,ghost-filter;
+		nvidia,kbc-row-pins = <0 1 2>;
+		nvidia,kbc-col-pins = <16 17 18>;
+
+		linux,keymap = <MATRIX_KEY(0x00, 0x00, KEY_VOLUMEUP)
+				MATRIX_KEY(0x00, 0x01, KEY_POWER)
+				MATRIX_KEY(0x00, 0x02, KEY_MENU)
+
+				MATRIX_KEY(0x01, 0x00, KEY_VOLUMEDOWN)
+				MATRIX_KEY(0x01, 0x01, KEY_CAMERA)
+				MATRIX_KEY(0x01, 0x02, KEY_HOME)
+
+				MATRIX_KEY(0x02, 0x01, KEY_SEARCH)
+				MATRIX_KEY(0x02, 0x02, KEY_BACK)>;
+	};
+
+	sound {
+		nvidia,model = "Motorola Droid X2 (MB870) CPCAP";
+	};
+};
