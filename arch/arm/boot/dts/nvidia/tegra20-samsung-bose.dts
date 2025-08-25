@@ -1,0 +1,431 @@
+// SPDX-License-Identifier: GPL-2.0
+/dts-v1/;
+
+#include "tegra20-samsung-n1-common.dtsi"
+
+/ {
+	model = "Samsung Captivate Glide (SGH-i927)";
+	compatible = "samsung,bose", "nvidia,tegra20";
+
+	aliases {
+		spi0 = &panel_spi;
+	};
+
+	host1x@50000000 {
+		dc@54200000 {
+			rgb {
+				status = "okay";
+
+				port {
+					dpi_output: endpoint {
+						remote-endpoint = <&panel_input>;
+						bus-width = <24>;
+					};
+				};
+			};
+		};
+		
+#if 0
+/* TODO review all this again, gpios seems to be correct */
+		hdmi@54280000 {
+			status = "okay";
+
+			vdd-supply = <&hdmi_vdd_reg>;
+			pll-supply = <&hdmi_pll_reg>;
+			hdmi-supply = <&vdd_5v0_hdmi>;
+
+			nvidia,ddc-i2c-bus = <&hdmi_ddc>;
+			nvidia,hpd-gpio = <&gpio TEGRA_GPIO(N, 7) GPIO_ACTIVE_HIGH>;
+
+			port {
+				hdmi_to_mhl: endpoint {
+					remote-endpoint = <&mhl_to_hdmi>;
+				};
+			};
+		};
+#endif
+	};
+	
+#if 0
+//TODO is this still true?
+	i2cmux {
+		i2c@0 {
+			mxt224e@4a {
+				/* VDD LVSIO (level shifter) is not yet
+				 * implemented in maxtouch driver
+				 * TODO: lvsio-supply = <&tsp_lvsio_reg>;
+				 */
+			};
+		};
+	};
+#endif
+
+	i2c@7000c500 {
+		/* Not supported - no DT binding */
+		/* m5mo@1f {
+			reg = <0x1f>;
+			reset-gpios = <&gpio TEGRA_GPIO(D, 2) GPIO_ACTIVE_HIGH>;
+		};
+		*/
+	};
+
+	i2c@7000d000 {
+		max8907@3c {
+			regulators {
+				tsp_lvsio_reg: ldo15 {
+					regulator-name = "tsp_vdd_lvsio";
+					regulator-min-microvolt = <1800000>;
+					regulator-max-microvolt = <1800000>;
+				};
+			};
+		};
+	};
+
+#if 0
+/* TODO review all this again, gpios seems to be correct */
+	i2c-5 {
+		max17043@36 {x
+			power-supplies = <&usb_ta_charger>;
+		};
+	};
+
+	hdmi_ddc: i2c-13 {
+		compatible = "i2c-gpio";
+		sda-gpios = <&gpio TEGRA_GPIO(D, 4) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		scl-gpios = <&gpio TEGRA_GPIO(D, 3) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		i2c-gpio,delay-us = <5>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	i2c-14 {
+		/* MHL i2c */
+		compatible = "i2c-gpio";
+		sda-gpios = <&gpio TEGRA_GPIO(K, 3) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		scl-gpios = <&gpio TEGRA_GPIO(J, 0) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		i2c-gpio,delay-us = <5>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		sii9234@39 {
+			compatible = "sil,sii9234";
+			reg = <0x39>;
+			avcc33-supply = <&vcc_3v3_mhl>;
+			iovcc18-supply = <&vcc_1v8_mhl>;
+			avcc12-supply = <&vdd_hdmi_ldo>;
+			cvcc12-supply = <&vdd_hdmi_ldo>;
+			interrupt-parent = <&gpio>;
+			interrupts = <TEGRA_GPIO(H, 0) IRQ_TYPE_LEVEL_HIGH>;
+			reset-gpios = <&gpio TEGRA_GPIO(H, 1) GPIO_ACTIVE_LOW>;
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					mhl_to_hdmi: endpoint {
+						remote-endpoint = <&hdmi_to_mhl>;
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+					// FIXME TODO!
+				};
+			};
+		};
+	};
+
+	i2c-16 {
+		//TODO this only accounts rev6 onwards, prev ones seem to have it in i2c3
+		//TODO also is max8893? downstream says m5mo
+		/* Cameras PMIC i2c */
+		compatible = "i2c-gpio";
+		sda-gpios = <&gpio TEGRA_GPIO(L, 7) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		scl-gpios = <&gpio TEGRA_GPIO(L, 6) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		i2c-gpio,delay-us = <5>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		max8893@3e {
+			compatible = "maxim,max8893";
+			reg = <0x3e>;
+
+			regulators {
+				/* Front camera - s5k6aafx, back - m5mo */
+				/* Numbers used to indicate the sequence */
+				front_1_back_1: buck {
+					regulator-name = "cam_isp_core_1v2";
+					regulator-min-microvolt = <1200000>;
+					regulator-max-microvolt = <1200000>;
+				};
+
+				front_4_back_5: ldo1 {
+					regulator-name = "vt_io_1v8,cam_isp_1v8";
+					regulator-min-microvolt = <1800000>;
+					regulator-max-microvolt = <1800000>;
+				};
+
+				front_3_back_4: ldo2 {
+					regulator-name = "vt_core_1v5";
+					regulator-min-microvolt = <1500000>;
+					regulator-max-microvolt = <1500000>;
+				};
+
+				front_5_back_6: ldo3 {
+					regulator-name = "vt_cam_1v8,vt_sensor_io_1v8";
+					regulator-min-microvolt = <1800000>;
+					regulator-max-microvolt = <1800000>;
+				};
+
+				ldo4 {
+					/* not used */
+				};
+
+				back_7: ldo5 {
+					regulator-name = "cam_sensor_io_1v8";
+					regulator-min-microvolt = <1800000>;
+					regulator-max-microvolt = <1800000>;
+				};
+			};
+		};
+	};
+	
+	i2c-17 {
+		sda-gpios = <&gpio TEGRA_GPIO(Z, 3) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		scl-gpios = <&gpio TEGRA_GPIO(C, 6) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+	};
+#endif
+
+	i2c-19 {
+		/* Touch buttons i2c */
+		compatible = "i2c-gpio";
+		sda-gpios = <&gpio TEGRA_GPIO(T, 6) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		scl-gpios = <&gpio TEGRA_GPIO(T, 5) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		i2c-gpio,delay-us = <5>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		melfas-touchkey@20 {
+			compatible = "melfas,mcs5080-touchkey";
+			reg = <0x20>;
+			interrupt-parent = <&gpio>;
+			interrupts = <TEGRA_GPIO(Q, 4) IRQ_TYPE_EDGE_FALLING>;
+			key_maxval = <4>;
+			linux,code = <KEY_MENU KEY_HOMEPAGE KEY_BACK KEY_SEARCH>;
+		};
+	};
+
+	i2c-20 {
+		/* Keyboard i2c */
+		compatible = "i2c-gpio";
+		sda-gpios = <&gpio TEGRA_GPIO(X, 2) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		scl-gpios = <&gpio TEGRA_GPIO(X, 0) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		i2c-gpio,delay-us = <5>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		stmpe1801@40 {
+			compatible = "st,stmpe1801";
+			reg = <0x40>;
+			interrupt-parent = <&gpio>;
+			interrupts = <TEGRA_GPIO(C, 7) IRQ_TYPE_EDGE_FALLING>;
+
+			stmpe_keypad {
+				compatible = "st,stmpe-keypad";
+				debounce-interval = <10>;
+				st,scan-count = <5>;
+				st,no-autorepeat;
+				keypad,num-rows = <8>;
+				keypad,num-columns = <6>;
+
+				linux,keymap = <
+					/* row, col, code */
+					MATRIX_KEY(0, 0, KEY_R)
+					MATRIX_KEY(0, 1, KEY_G)
+					MATRIX_KEY(0, 2, KEY_V)
+					MATRIX_KEY(0, 3, KEY_LEFTMETA)
+					MATRIX_KEY(0, 4, KEY_MENU)
+					MATRIX_KEY(0, 5, KEY_HOME)
+
+					MATRIX_KEY(1, 0, KEY_T)
+					MATRIX_KEY(1, 1, KEY_H)
+					MATRIX_KEY(1, 2, KEY_B)
+					MATRIX_KEY(1, 3, KEY_RIGHTMETA)
+					MATRIX_KEY(1, 4, KEY_Q)
+					MATRIX_KEY(1, 5, KEY_RIGHTALT /* KEY_FN */)
+
+					MATRIX_KEY(2, 0, KEY_Y)
+					MATRIX_KEY(2, 1, KEY_J)
+					MATRIX_KEY(2, 2, KEY_N)
+					MATRIX_KEY(2, 3, KEY_SPACE)
+					MATRIX_KEY(2, 4, KEY_A)
+					MATRIX_KEY(2, 5, KEY_LEFTSHIFT)
+
+					MATRIX_KEY(3, 0, KEY_U)
+					MATRIX_KEY(3, 1, KEY_K)
+					MATRIX_KEY(3, 2, KEY_M)
+					MATRIX_KEY(3, 3, KEY_COMMA)
+					MATRIX_KEY(3, 4, KEY_S)
+					MATRIX_KEY(3, 5, KEY_Z)
+
+					MATRIX_KEY(4, 0, KEY_I)
+					MATRIX_KEY(4, 1, KEY_L)
+					MATRIX_KEY(4, 2, KEY_LEFT)
+					MATRIX_KEY(4, 3, KEY_DOT)
+					MATRIX_KEY(4, 4, KEY_W)
+					MATRIX_KEY(4, 5, KEY_X)
+
+					MATRIX_KEY(5, 0, KEY_O)
+					MATRIX_KEY(5, 1, KEY_UP)
+					MATRIX_KEY(5, 2, KEY_ENTER /* KEY_OK */)
+					MATRIX_KEY(5, 3, KEY_QUESTION)
+					MATRIX_KEY(5, 4, KEY_E)
+					MATRIX_KEY(5, 5, KEY_C)
+
+					MATRIX_KEY(6, 0, KEY_P)
+					MATRIX_KEY(6, 1, KEY_KPENTER /* KEY_ENTER */)
+					MATRIX_KEY(6, 2, KEY_RIGHT)
+					MATRIX_KEY(6, 3, KEY_DOWN)
+					MATRIX_KEY(6, 4, KEY_D)
+
+					MATRIX_KEY(7, 0, KEY_BACKSPACE /* KEY_DELETE */)
+					MATRIX_KEY(7, 1, KEY_BACK)
+					MATRIX_KEY(7, 2, KEY_SEARCH)
+					MATRIX_KEY(7, 3, KEY_WWW)
+					MATRIX_KEY(7, 4, KEY_F)
+					MATRIX_KEY(7, 5, KEY_RIGHTALT /* KEY_FN */) >;
+			};
+
+			stmpegpio: stmpe_gpio {
+				compatible = "st,stmpe-gpio";
+				st,norequest-mask = <0x7fff>;
+				gpio-controller;
+				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+			};
+		};
+	};
+
+	pinmux@70000014 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&state_default>;
+
+		state_default: pinmux {
+			conf-dtf {
+				nvidia,pins = "dtf", "spdi", "spib", "spih";
+				nvidia,pull = <TEGRA_PIN_PULL_UP>;
+				nvidia,tristate = <TEGRA_PIN_DISABLE>;
+			};
+
+			conf-gpv {
+				nvidia,pins = "gpv";
+				nvidia,pull = <TEGRA_PIN_PULL_NONE>;
+				nvidia,tristate = <TEGRA_PIN_DISABLE>;
+			};
+
+			conf-kbcd {
+				nvidia,pins = "kbcd";
+				nvidia,pull = <TEGRA_PIN_PULL_NONE>;
+				nvidia,tristate = <TEGRA_PIN_DISABLE>;
+			};
+
+			drive-dap {
+				nvidia,pins = "drive_dap2", "drive_dap3";
+				nvidia,high-speed-mode = <TEGRA_PIN_ENABLE>;
+				nvidia,schmitt = <TEGRA_PIN_ENABLE>;
+				nvidia,low-power-mode = <TEGRA_PIN_LP_DRIVE_DIV_1>;
+				nvidia,pull-down-strength = <31>;
+				nvidia,pull-up-strength = <31>;
+				nvidia,slew-rate-rising = <TEGRA_PIN_SLEW_RATE_SLOWEST>;
+				nvidia,slew-rate-falling = <TEGRA_PIN_SLEW_RATE_SLOWEST>;
+			};
+		};
+	};
+
+	memory-controller@7000f400 {
+		nvidia,use-ram-code;
+		//TODO
+	};
+
+	panel_spi: spi@7000d800 {
+		status = "okay";
+		spi-max-frequency = <1000000>;
+
+		panel: panel@2 {
+			/* 480x800 AMOLED panel */
+			compatible = "samsung,bose-panel", "samsung,s6e63m0";
+			reg = <2>;
+
+			spi-max-frequency = <1000000>;
+
+			spi-cpol;
+			spi-cpha;
+
+			reset-gpios = <&gpio TEGRA_GPIO(C, 1) GPIO_ACTIVE_LOW>;
+
+			vdd3-supply = <&vlcd_1v8_reg>;
+			vci-supply = <&vlcd_3v0_reg>;
+
+			panel-width-mm = <52>;
+			panel-height-mm = <87>;
+
+			port {
+				panel_input: endpoint {
+					remote-endpoint = <&dpi_output>;
+				};
+			};
+		};
+	};
+
+	sdhci@c8000400 {
+		broken-cd;
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		switch-hall {
+			label = "Keyboard Slide";
+			gpios = <&gpio TEGRA_GPIO(W, 3) GPIO_ACTIVE_HIGH>;
+			linux,input-type = <EV_SW>;
+			linux,code = <SW_KEYPAD_SLIDE>;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led-kbd {
+			label = "Keyboard backlight";
+			gpios = <&gpio TEGRA_GPIO(L, 5) GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+	};
+	
+#if 0
+	sound {
+		compatible = "samsung,tegra-audio-wm8994-bose",
+					 "nvidia,tegra-audio-wm8994";
+		nvidia,model = "Samsung SGH-I927 Captivate Glide WM8994";
+	}
+
+	/* TODO check on n1 first with schematics */
+	usb_ta_charger: max8922-charger {
+		compatible = "maxim,max8903";
+		chg-gpios = <&stmpegpio 16 GPIO_ACTIVE_LOW>;
+		cen-gpios = <&gpio TEGRA_GPIO(R, 3) GPIO_ACTIVE_LOW>;
+		uok-gpios = <&gpio TEGRA_GPIO(T, 0) GPIO_ACTIVE_LOW>;
+		/*
+		 * Original sources also use FSA9480 for USB charger
+		 * detection, but it's on extcon and not GPIO,
+		 * so skip it since dok (GPIO_TA_nCONNECTED) works fine.
+		 * (specified as uok since USB is detected)
+		 */
+
+		// charger_supply: otg-vbus {}; // not implemented yet
+	};
+#endif
+};

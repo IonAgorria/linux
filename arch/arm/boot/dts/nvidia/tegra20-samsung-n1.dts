@@ -1,0 +1,259 @@
+// SPDX-License-Identifier: GPL-2.0
+/dts-v1/;
+
+#include "tegra20-samsung-n1-common.dtsi"
+
+/ {
+	model = "Samsung Galaxy R (GT-I9103)";
+	compatible = "samsung,n1", "nvidia,tegra20";
+
+	aliases {
+		i2c10 = &cmc_i2c;
+		spi0 = &panel_spi;
+	};
+
+	host1x@50000000 {
+		dc@54200000 {
+			rgb {
+				status = "okay";
+
+				port {
+					dpi_output: endpoint {
+						remote-endpoint = <&bridge_input>;
+						bus-width = <24>;
+					};
+				};
+			};
+		};
+	};
+
+	pinmux@70000014 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&state_default>;
+
+		state_default: pinmux {
+			conf-dtf {
+				nvidia,pins = "dtf", "spdi", "spih";
+				nvidia,pull = <TEGRA_PIN_PULL_NONE>;
+				nvidia,tristate = <TEGRA_PIN_DISABLE>;
+			};
+
+			conf-gpv {
+				nvidia,pins = "gpv", "spib";
+				nvidia,pull = <TEGRA_PIN_PULL_DOWN>;
+				nvidia,tristate = <TEGRA_PIN_DISABLE>;
+			};
+
+			conf-kbcd {
+				nvidia,pins = "kbcd";
+				nvidia,pull = <TEGRA_PIN_PULL_UP>;
+				nvidia,tristate = <TEGRA_PIN_DISABLE>;
+			};
+		};
+	};
+
+	memory-controller@7000f400 {
+		nvidia,use-ram-code;
+		//TODO
+	};
+	
+#if 0
+	//TODO
+	i2cmux {
+		i2c@0 {
+			mxt224e@4a {
+				/* VDD LVSIO (level shifter) is not yet
+				 * implemented in maxtouch driver
+				 * TODO: lvsio-supply = <&tsp_lvsio_reg>;
+				 */
+			};
+		};
+	};
+#endif
+	
+	i2c@7000c500 {
+		/* Not supported - no DT binding */
+		/* s5k4ecgx@56 {
+			reg = <0x56>;
+		};
+		*/
+	};
+
+	i2c@7000d000 {
+		max8907@3c {
+			regulators {
+				tsp_lvsio_reg: ldo14 {
+					/* TODO Downstream says 2.8v in n1 and 1.8v in bose */
+					regulator-name = "tsp_vdd_lvsio";
+					regulator-min-microvolt = <1800000>;
+					regulator-max-microvolt = <1800000>;
+				};
+
+				vcmc623_io_1v8: ldo15 {
+					regulator-name = "vcmc623_io_1v8";
+					regulator-min-microvolt = <1800000>;
+					regulator-max-microvolt = <1800000>;
+				};
+			};
+		};
+	};
+
+#if 0
+	//TODO
+	i2c-5 {
+		max17043@36 {
+			power-supplies = <&usb_ta_charger>;
+		};
+	};
+#endif
+
+	cmc_i2c: i2c-10 {
+		compatible = "i2c-gpio";
+
+		sda-gpios = <&gpio TEGRA_GPIO(Z, 3) GPIO_ACTIVE_HIGH>;
+		scl-gpios = <&gpio TEGRA_GPIO(C, 6) GPIO_ACTIVE_HIGH>;
+
+		i2c-gpio,scl-output-only;
+		i2c-gpio,delay-us = <1>;
+
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cmc623: bridge@38 {
+			compatible = "samsung,cmc623";
+			reg = <0x38>;
+
+			enable-gpios = <&gpio TEGRA_GPIO(Q, 4) GPIO_ACTIVE_HIGH>;
+			reset-gpios = <&gpio TEGRA_GPIO(J, 6) GPIO_ACTIVE_HIGH>;
+
+			bypass-gpios = <&gpio TEGRA_GPIO(BB, 5) GPIO_ACTIVE_LOW>;
+			sleep-gpios = <&gpio TEGRA_GPIO(W, 0) GPIO_ACTIVE_HIGH>;
+
+			vdd3v0-supply = <&vcmc623_3v0>;
+			vdd1v2-supply = <&vcmc623_1v2>;
+			vddio1v8-supply = <&vcmc623_io_1v8>;
+
+			cmc623_backlight: backlight {
+				compatible = "samsung,cmc623-backlight";
+
+				enable-gpios = <&gpio TEGRA_GPIO(R, 3) GPIO_ACTIVE_HIGH>;
+			};
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+
+					bridge_input: endpoint {
+						remote-endpoint = <&dpi_output>;
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+
+					bridge_output: endpoint {
+						remote-endpoint = <&panel_input>;
+					};
+				};
+			};
+		};
+	};
+
+#if 0
+	i2c-17 {
+		sda-gpios = <&gpio TEGRA_GPIO(T, 6) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		scl-gpios = <&gpio TEGRA_GPIO(T, 5) (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+	};
+#endif
+
+	panel_spi: spi@7000d800 {
+		status = "okay";
+		spi-max-frequency = <1000000>;
+
+		panel: panel@2 {
+			/* 480x800 TFT LCD panel */
+			compatible = "sony,l4f00430t01";
+			reg = <2>;
+
+			spi-max-frequency = <1000000>;
+
+			spi-cpol;
+			spi-cpha;
+
+			reset-gpios = <&gpio TEGRA_GPIO(C, 1) GPIO_ACTIVE_LOW>;
+
+			vdd1v8-supply = <&vlcd_1v8_reg>;
+			vdd3v0-supply = <&vlcd_3v0_reg>;
+
+			panel-width-mm = <55>;
+			panel-height-mm = <91>;
+
+			backlight = <&cmc623_backlight>;
+
+			port {
+				panel_input: endpoint {
+					remote-endpoint = <&bridge_output>;
+				};
+			};
+		};
+	};
+
+	sdhci@c8000400 {
+		/* battery blocks the sdcard slot and the device lacks CD pin */
+		non-removable;
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		key-home {
+			label = "Home";
+			gpios = <&gpio TEGRA_GPIO(O, 5) GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_ENTER>;
+		};
+	};
+
+	vcmc623_3v0: regulator-cmc623-3v0 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcmc623_3v0";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+
+	vcmc623_1v2: regulator-cmc623-1v2 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcmc623_1v2";
+		regulator-min-microvolt = <1200000>;
+		regulator-max-microvolt = <1200000>;
+		gpio = <&gpio TEGRA_GPIO(L, 5) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+	};
+	
+#if 0
+	sound {
+		compatible = "samsung,tegra-audio-wm8994-n1",
+					 "nvidia,tegra-audio-wm8994";
+		nvidia,model = "Samsung GT-I9103 Galaxy R WM8994";
+	}
+	
+	/* TODO check schematics */
+	usb_ta_charger: max8922-charger {
+		compatible = "maxim,max8903";
+		chg-gpios = <&stmpegpio 16 GPIO_ACTIVE_LOW>;
+		cen-gpios = <&gpio TEGRA_GPIO(X, 0) GPIO_ACTIVE_LOW>;
+		uok-gpios = <&gpio TEGRA_GPIO(T, 0) GPIO_ACTIVE_LOW>;
+		/*
+		 * Original sources also use FSA9480 for USB charger
+		 * detection, but it's on extcon and not GPIO,
+		 * so skip it since dok (GPIO_TA_nCONNECTED) works fine.
+		 * (specified as uok since USB is detected)
+		 */
+
+		// charger_supply: otg-vbus {}; // not implemented yet
+	};
+#endif
+};
+
