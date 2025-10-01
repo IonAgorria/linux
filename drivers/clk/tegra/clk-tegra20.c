@@ -802,8 +802,9 @@ static void __init tegra20_periph_clk_init(void)
 	clks[TEGRA20_CLK_MC] = clk;
 
 	/* dsi */
-	clk = tegra_clk_register_periph_gate("dsi", "pll_d_out0", 0, clk_base,
-				    0, 48, periph_clk_enb_refcnt);
+	clk = tegra_clk_register_periph_gate("dsi", "pll_d", 0, clk_base, 0,
+				    48, periph_clk_enb_refcnt);
+	clk_register_clkdev(clk, NULL, "dsi");
 	clks[TEGRA20_CLK_DSI] = clk;
 
 	/* pex */
