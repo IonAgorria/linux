@@ -1172,6 +1172,25 @@
 		vin-supply = <&vdd_5v0_sys>;
 	};
 
+#if 0
+	sound {
+		compatible = "motorola,tegra-audio-cpcap-mot",
+			     "nvidia,tegra-audio-cpcap";
+
+		nvidia,audio-routing =
+			"Int Spk", "SPKR",
+			"Int Spk", "SPKL";
+
+		nvidia,i2s-controller = <&tegra_i2s1>;
+//		nvidia,audio-codec = <&cpcap_audio>;
+
+		clocks = <&tegra_car TEGRA20_CLK_PLL_A>,
+			 <&tegra_car TEGRA20_CLK_PLL_A_OUT0>,
+			 <&tegra_car TEGRA20_CLK_CDEV1>;
+		clock-names = "pll_a", "pll_a_out0", "mclk";
+	};
+#endif
+
 	thermal-zones {
 		skin-thermal {
 			polling-delay-passive = <1000>; /* milliseconds */
