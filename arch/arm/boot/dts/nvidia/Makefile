@@ -22,7 +22,6 @@ dtb-$(CONFIG_ARCH_TEGRA_2x_SOC) += \
 	tegra20-harmony.dtb \
 	tegra20-colibri-eval-v3.dtb \
 	tegra20-colibri-iris.dtb \
-	tegra20-glide.dtb \
 	tegra20-medcom-wide.dtb \
 	tegra20-motorola-olympus.dtb \
 	tegra20-motorola-daytona.dtb \
